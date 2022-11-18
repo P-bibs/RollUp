@@ -1,4 +1,4 @@
-use calamine::{Reader, open_workbook_auto, Xlsx, DataType};
+use calamine::{Reader, open_workbook_auto, DataType};
 
 fn main() {
     let path = format!("{}/test.xlsx", env!("CARGO_MANIFEST_DIR"));
