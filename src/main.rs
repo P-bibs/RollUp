@@ -1,6 +1,19 @@
 use calamine::{Reader, open_workbook_auto, DataType};
-
+use rollup::sheet::{Cell, Formula, Range};
+use rollup::parse::parse;
 fn main() {
+    let s = "=SUM(1,2)";
+        let expected_output = Cell::Formula(Formula::Function(
+            "SUM".to_string(),
+            vec![Formula::Range(Range {
+                start: (0, 0),
+                end: (0, 1),
+            })],
+        ));
+        println!("{:?}", parse(s))
+}
+
+fn main1() {
     let path = format!("{}/test.xlsx", env!("CARGO_MANIFEST_DIR"));
     let mut workbook = open_workbook_auto(path).expect("Cannot open file");
 
