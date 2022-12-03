@@ -36,16 +36,16 @@ pub enum Token {
     String(String),
 }
 
-fn letter_to_index(letter: &str) -> u32 {
+pub fn letter_to_index(letter: &str) -> u32 {
     let mut column = 0;
     let length = letter.len();
     for (i, c) in letter.chars().enumerate() {
         column += (c as u32 - 64) * 26u32.pow(length as u32 - i as u32 - 1)
     }
-    return column;
+    return column - 1;
 }
 
-fn index_to_letter(mut column: u32) -> String {
+pub fn index_to_letter(mut column: u32) -> String {
     column += 1;
     let mut letter: String = String::new();
 
@@ -60,7 +60,7 @@ fn index_to_letter(mut column: u32) -> String {
 fn expect_token(lex: &mut Vec<Token>, token: Token) -> Result<()> {
     match lex.pop() {
         Some(t) if t == token => Ok(()),
-        _ => bail!("ahh"),
+        _ => bail!("Expected token: {:?}", token),
     }
 }
 
@@ -89,21 +89,21 @@ fn parse_expr(lex: &mut Vec<Token>) -> Result<Formula> {
                             Some(Token::RParen) => {
                                 return Ok(Formula::Function(name, exprs));
                             }
-                            _ => return bail!("ahh"),
+                            _ => bail!("Expected comma or RParen"),
                         };
                     }
                 }
                 Some(Token::Number(n)) => {
                     expect_token(lex, Token::Colon)?;
                     let column1 = name;
-                    let row1 = n;
+                    let row1 = n - 1;
                     let column2 = match lex.pop() {
                         Some(Token::Identifier(id)) => id,
-                        _ => return bail!("ahh"),
+                        _ => bail!("Expected identifier"),
                     };
                     let row2 = match lex.pop() {
-                        Some(Token::Number(n)) => n,
-                        _ => return bail!("ahh"),
+                        Some(Token::Number(n)) => n - 1,
+                        _ => bail!("Expected number"),
                     };
 
                     let column1 = letter_to_index(&column1);
@@ -116,7 +116,7 @@ fn parse_expr(lex: &mut Vec<Token>) -> Result<Formula> {
 
                     Ok(Formula::Range(range))
                 }
-                _ => bail!("ahh"),
+                _ => bail!("Expected LParen or Number"),
             }
         }
         Some(Token::String(str)) => Ok(Formula::Text(str)),
@@ -128,11 +128,12 @@ fn parse_cell(lex: &mut Vec<Token>) -> Result<Cell> {
     match lex.pop() {
         Some(Token::Equals) => Ok(Cell::Formula(parse_expr(lex)?)),
         Some(Token::String(str)) => Ok(Cell::Text(str)),
-        _ => bail!("ahh"),
+        e => bail!("Expected equals or string, but got {:?}", e),
     }
 }
 
 pub fn parse(s: &str) -> Result<Cell> {
+    println!("Parsing: {:?}", s);
     let mut lex = Token::lexer(s)
         .into_iter()
         .collect::<Vec<_>>()
